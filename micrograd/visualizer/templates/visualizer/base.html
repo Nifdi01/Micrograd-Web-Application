@@ -4,19 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Graph Visualization</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/python/python.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
     <style>
-        h1 {
-            font-family: 'Arial';
-            text-align: center;
-            margin-bottom: 5vh;
-        }
         .scroll-container {
             width: 100%;
             max-width: 800px; /* Adjust the maximum width as needed */
             margin: 0 auto; /* Center the container */
             border: 1px solid #ccc;
+            border-radius: 10px;
             overflow-x: scroll;
         }
+        .scroll-container::-webkit-scrollbar {
+            display: none;
+          }
         .image-container {
             width: max-content;
             height: max-content;
@@ -25,15 +29,113 @@
             width: 100%;
             height: auto;
         }
+        .code-editor{
+            display: inline;
+        }
+        span{
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
-    <h1>Graph Visualization</h1>
-    <div class="scroll-container">
-        <div class="image-container">
-            <img src="data:image/png;base64,{{ image_base64 }}" alt="Graph Visualization">
+    <h1 class="text-center">Gradient Visualization</h1>
+    <p class="desc mb-5 text-center">You can input code and it will visualize it</p>
+    <div class="container m-auto">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="code-container">
+                    {% csrf_token %}
+                    <textarea id="code-editor"></textarea>
+                    <button id="visualize-button">Visualize</button>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="scroll-container">
+                    <div class="image-container">
+                        <img id='graph-image' src="data:image/png;base64,{{ image_base64 }}" alt="Graph Visualization">
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <h4 class="text-left">
+                        Rules:
+                    </h4>
+                    <p class="fw-lighter">
+                        You can initialize inputs and weight by using the <span>Value</span> function. For example, if you
+                        want to add an input a, just type in <span>a = Value(3, label='a')</span>. Keep in mind that you are allowed 
+                        to put name it whatever you want. The value <>should not be non-numeric.
+                    </p>
+                    <p class="fw-lighter">Your code should always end with <span>L</span>. For example: <br>
+                        <code>
+                            a = Value(3) <br>
+                            b = Value(4) <br>
+                            L = a + b <br>
+                        </code>
+                        If the program does not detect <span>L</span> at the end then it wont create a graph.
+                    </p>
+                    <p class="fw-lighter">
+                        There are currently 2 activation functions available for use. <span>tanh</span> and <span>relu</span>. They only be used with <span>L</span>.
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <div class="ms-5">
+                        <h4 class="text-left">
+                            List of Functions
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-7">
+                                <p>Initialization: <code>a=Value(n, label='optional')</code></p>
+                                <p>Addition: <code>a + b</code></p>
+                                <p>Subtraction: <code>a - b</code></p>
+                                <p>Division: <code>a / b</code></p>
+                                <p>Multiplication: <code>a * b</code></p>
+                            </div>
+                            <div class="col">
+                                <p>Negation: <code>neg_a = -a</code></p>
+                                <p>Hyperbolic Tangent: <code>tanh(a)</code></p>
+                                <p>Relu: <code>relu(a)</code></p>
+                                <p>Power: <code>a**n where n is an integer</code></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                </div>
+            </div>
         </div>
     </div>
+    <script>
+        var codeEditor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+            mode: 'python',
+            lineNumbers: true
+        });
+    
+        var visualizeButton = document.getElementById('visualize-button');
+        var graphImage = document.getElementById('graph-image');
+    
+        visualizeButton.addEventListener('click', function() {
+            var userCode = codeEditor.getValue();
+    
+            fetch('/visualizer/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: 'user_code=' + encodeURIComponent(userCode)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.image_base64) {
+                    graphImage.src = 'data:image/png;base64,' + data.image_base64;
+                } else if (data.error) {
+                    console.error(data.error);
+                }
+            });
+        });
+    </script>
+     
 </body>
 </html>
 
