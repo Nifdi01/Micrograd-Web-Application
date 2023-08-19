@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Visualization</title>
+    <style>
+        h1 {
+            font-family: 'Arial';
+            text-align: center;
+            margin-bottom: 5vh;
+        }
+        .scroll-container {
+            width: 100%;
+            max-width: 800px; /* Adjust the maximum width as needed */
+            margin: 0 auto; /* Center the container */
+            border: 1px solid #ccc;
+            overflow-x: scroll;
+        }
+        .image-container {
+            width: max-content;
+            height: max-content;
+        }
+        .image-container img {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Graph Visualization</h1>
+    <div class="scroll-container">
+        <div class="image-container">
+            <img src="data:image/png;base64,{{ image_base64 }}" alt="Graph Visualization">
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+
